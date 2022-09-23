@@ -160,6 +160,16 @@ void add(void)
 	} while (origem);
 }
 
+//Hash Unsiversal (converte uma string em um inteiro)
+int hashU(char *v){
+  int h, a = 31415, b = 2803;
+  for(h = 0; *v = '\0'; v++){
+    a = a * b % (1009 - 1);
+    h = (a*h + *v)
+  }
+  return h;
+}
+
 void procurar(void)
 {
 	int i, j;

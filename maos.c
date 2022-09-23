@@ -49,7 +49,7 @@ void GRAPHinsertArc( Graph G, int v, int w) {
 }
 
 int main(void){
-    int n, a, qntV, qntA;
+    int n, a, qntV;
     scanf("%d %d", &n, &a);
 
     int nomeOrigem[50], nomeDestino[50];
@@ -61,7 +61,6 @@ int main(void){
     }
     for (int i = 0; i < a; i++){
         // Ler e inserir aresta
-        qntA = i+1;
     }
     
     // Buscar
