@@ -1,169 +1,206 @@
-// BFS algorithm in C
+/*   
+* Este programa implementa o algoritmo de Dijkstra para o problema do 
+* caminho de custo minimo em grafos dirigidos com custos positivos nas
+* arestas.
+*
+* @autor : vanderson lucio
+* @e-mail: vanderson.gold@gmail.com
+*
+*/
 
 #include <stdio.h>
 #include <stdlib.h>
-#define SIZE 40
+#include <math.h>
 
-struct queue {
-  int items[SIZE];
-  int front;
-  int rear;
-};
+#define FLSH gets(l)
 
-struct queue* createQueue();
-void enqueue(struct queue* q, int);
-int dequeue(struct queue* q);
-void display(struct queue* q);
-int isEmpty(struct queue* q);
-void printQueue(struct queue* q);
+int destino, origem, vertices = 0;
+int custo, *custos = NULL; 
 
-struct node {
-  int vertex;
-  struct node* next;
-};
+void dijkstra(int vertices,int origem,int destino,int *custos)
+{
+	int i,v, cont = 0;
+	int *ant, *tmp;  
+	int *z;     /* vertices para os quais se conhece o caminho minimo */
+	double min;
+	double dist[vertices]; /* vetor com os custos dos caminhos */
 
-struct node* createNode(int);
 
-struct Graph {
-  int numVertices;
-  struct node** adjLists;
-  int* visited;
-};
+	/* aloca as linhas da matriz */
+	ant = calloc (vertices, sizeof(int *));
+	tmp = calloc (vertices, sizeof(int *));
+	if (ant == NULL) {
+		printf ("** Erro: Memoria Insuficiente **");
+		exit(-1);
+	}
 
-// BFS algorithm
-void bfs(struct Graph* graph, int startVertex) {
-  struct queue* q = createQueue();
+	z = calloc (vertices, sizeof(int *));
+	if (z == NULL) {
+		printf ("** Erro: Memoria Insuficiente **");
+		exit(-1);
+	}
 
-  graph->visited[startVertex] = 1;
-  enqueue(q, startVertex);
+	for (i = 0; i < vertices; i++) {
+		if (custos[(origem - 1) * vertices + i] !=- 1) {
+			ant[i] = origem - 1;
+			dist[i] = custos[(origem-1)*vertices+i];
+		}
+		else {
+			ant[i]= -1;
+			dist[i] = HUGE_VAL;
+		}
+		z[i]=0;
+	}
+	z[origem-1] = 1;
+	dist[origem-1] = 0;
 
-  while (!isEmpty(q)) {
-    printQueue(q);
-    int currentVertex = dequeue(q);
-    printf("Visited %d\n", currentVertex);
+	/* Laco principal */
+	do {
 
-    struct node* temp = graph->adjLists[currentVertex];
+		/* Encontrando o vertice que deve entrar em z */
+		min = HUGE_VAL;
+		for (i=0;i<vertices;i++)
+			if (!z[i])
+				if (dist[i]>=0 && dist[i]<min) {
+					min=dist[i];v=i;
+				}
 
-    while (temp) {
-      int adjVertex = temp->vertex;
+		/* Calculando as distancias dos novos vizinhos de z */
+		if (min != HUGE_VAL && v != destino - 1) {
+			z[v] = 1;
+			for (i = 0; i < vertices; i++)
+				if (!z[i]) {
+					if (custos[v*vertices+i] != -1 && dist[v] + custos[v*vertices+i] < dist[i]) {
+					   	dist[i] = dist[v] + custos[v*vertices+i];
+						ant[i] =v;
+				   	}
+        		}
+		}
+	} while (v != destino - 1 && min != HUGE_VAL);
 
-      if (graph->visited[adjVertex] == 0) {
-        graph->visited[adjVertex] = 1;
-        enqueue(q, adjVertex);
-      }
-      temp = temp->next;
-    }
-  }
+	/* Mostra o Resultado da busca */
+	printf("\tDe %d para %d: \t", origem, destino);
+	if (min == HUGE_VAL) {
+		printf("Nao Existe\n");
+		printf("\tCusto: \t- \n");
+	}
+	else {
+		i = destino;
+		i = ant[i-1];
+		while (i != -1) {
+		//	printf("<-%d",i+1);
+			tmp[cont] = i+1;
+			cont++;
+			i = ant[i];
+		}
+		
+		for (i = cont; i > 0 ; i--) {
+			printf("%d -> ", tmp[i-1]);
+		}
+		printf("%d", destino);
+		
+		printf("\n\tCusto:  %d\n",(int) dist[destino-1]);
+	}
 }
 
-// Creating a node
-struct node* createNode(int v) {
-  struct node* newNode = malloc(sizeof(struct node));
-  newNode->vertex = v;
-  newNode->next = NULL;
-  return newNode;
+void limpar(void)
+{
+     printf("\033[2J"); /* limpa a tela */
+     printf("\033[1H"); /* poe o curso no topo */
 }
 
-// Creating a graph
-struct Graph* createGraph(int vertices) {
-  struct Graph* graph = malloc(sizeof(struct Graph));
-  graph->numVertices = vertices;
-
-  graph->adjLists = malloc(vertices * sizeof(struct node*));
-  graph->visited = malloc(vertices * sizeof(int));
-
-  int i;
-  for (i = 0; i < vertices; i++) {
-    graph->adjLists[i] = NULL;
-    graph->visited[i] = 0;
-  }
-
-  return graph;
+void cabecalho(void)
+{
+ 	limpar();
+	printf("Implementacao do Algoritmo de Dijasktra\n");
+	printf("Comandos:\n");
+	printf("\t d - Adicionar um Grafo\n"
+	  	   "\t r - Procura Os Menores Caminhos no Grafo\n"
+	  	   "\t CTRL+c - Sair do programa\n");
+	printf(">>> ");
 }
 
-// Add edge
-void addEdge(struct Graph* graph, int src, int dest) {
-  // Add edge from src to dest
-  struct node* newNode = createNode(dest);
-  newNode->next = graph->adjLists[src];
-  graph->adjLists[src] = newNode;
+void add(void)
+{
+	int i, j;
+	
+	do {
+		printf("\nInforme o numero de vertices (no minimo 2 ): ");
+		scanf("%d",&vertices);
+	} while (vertices < 2 );
 
-  // Add edge from dest to src
-  newNode = createNode(src);
-  newNode->next = graph->adjLists[dest];
-  graph->adjLists[dest] = newNode;
+	if (!custos)
+		free(custos);
+	custos = (int *) malloc(sizeof(int)*vertices*vertices);
+	for (i = 0; i <= vertices * vertices; i++)
+		custos[i] = -1;
+
+	printf("Entre com as Arestas:\n");
+	do {
+		do {
+			printf("Origem da aresta (entre 1 e %d ou '0' para sair): ", vertices);
+			scanf("%d",&origem);
+		} while (origem < 0 || origem > vertices);
+
+		if (origem) {
+			do {
+				printf("Destino da aresta (entre 1 e %d, menos %d): ", vertices, origem);
+				scanf("%d", &destino);
+			} while (destino < 1 || destino > vertices || destino == origem);
+
+			do {
+				printf("Custo (positivo) da aresta do vertice %d para o vertice %d: ",
+						origem, destino);
+				scanf("%d",&custo);
+			} while (custo < 0);
+
+			custos[(origem-1) * vertices + destino - 1] = custo;
+		}
+
+	} while (origem);
 }
 
-// Create a queue
-struct queue* createQueue() {
-  struct queue* q = malloc(sizeof(struct queue));
-  q->front = -1;
-  q->rear = -1;
-  return q;
+void procurar(void)
+{
+	int i, j;
+ 
+	/* Azul */
+	printf("\033[36;1m");
+	printf("Lista dos Menores Caminhos no Grafo Dado: \n");
+		 	
+	for (i = 1; i <= vertices; i++) {
+		for (j = 1; j <= vertices; j++)
+			dijkstra(vertices, i,j, custos);
+		printf("\n");
+	}
+
+	printf("<Pressione ENTER para retornar ao menu principal>\n");
+	/* Volta cor nornal */
+	printf("\033[m");
 }
 
-// Check if the queue is empty
-int isEmpty(struct queue* q) {
-  if (q->rear == -1)
-    return 1;
-  else
-    return 0;
-}
+int main(int argc, char **argv) {
+	int i, j; 
+	char opcao[3], l[50]; 
 
-// Adding elements into queue
-void enqueue(struct queue* q, int value) {
-  if (q->rear == SIZE - 1)
-    printf("\nQueue is Full!!");
-  else {
-    if (q->front == -1)
-      q->front = 0;
-    q->rear++;
-    q->items[q->rear] = value;
-  }
-}
+	do {
 
-// Removing elements from queue
-int dequeue(struct queue* q) {
-  int item;
-  if (isEmpty(q)) {
-    printf("Queue is empty");
-    item = -1;
-  } else {
-    item = q->items[q->front];
-    q->front++;
-    if (q->front > q->rear) {
-      printf("Resetting queue ");
-      q->front = q->rear = -1;
-    }
-  }
-  return item;
-}
+	 	cabecalho();
+		scanf("%s", &opcao);
 
-// Print the queue
-void printQueue(struct queue* q) {
-  int i = q->front;
+		if ((strcmp(opcao, "d")) == 0) {
+			add();	
+		}
+		FLSH;
 
-  if (isEmpty(q)) {
-    printf("Queue is empty");
-  } else {
-    printf("\nQueue contains \n");
-    for (i = q->front; i < q->rear + 1; i++) {
-      printf("%d ", q->items[i]);
-    }
-  }
-}
+		if ((strcmp(opcao, "r") == 0) && (vertices > 0) ) {
+			procurar();
+			FLSH;
+		}
 
-int main() {
-  struct Graph* graph = createGraph(6);
-  addEdge(graph, 0, 1);
-  addEdge(graph, 0, 2);
-  addEdge(graph, 1, 2);
-  addEdge(graph, 1, 4);
-  addEdge(graph, 1, 3);
-  addEdge(graph, 2, 4);
-  addEdge(graph, 3, 4);
+	} while (opcao != "x"); 
 
-  bfs(graph, 0);
+	printf("\nAte a proxima...\n\n");
 
-  return 0;
+	return 0;
 }
