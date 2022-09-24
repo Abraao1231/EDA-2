@@ -7,7 +7,6 @@ struct node {
    link next;
    // int peso;
 };
-int MAX = 1009;
 //Grafo
 struct graph {
    int V;
@@ -20,11 +19,11 @@ typedef struct graph *Graph;
 //lista de adjacência
 
 
-int hashU(char *v){
+int hashU(char *v, int m){
   int h, a = 31415, b = 3011;
   for(h = 0; *v != '\0'; v++){
-    a = a * b % (MAX - 1);
-    h = (a*h + *v)% MAX;
+    a = a * b % (m - 1);
+    h = (a*h + *v)% m;
   }
   return h;
 }
@@ -50,47 +49,48 @@ Graph GRAPHinit( int V) {
 
 //insere aresta no grafo (entender melhor)
 void GRAPHinsertArc( Graph G, char pos[], char nome[]) {
-
-   for (link a = G->adj[hashU(pos)]; a != NULL; a = a->next) 
+   int hash_value = hashU(pos, G->V);
+   for (link a = G->adj[hash_value]; a != NULL; a = a->next) 
       if (strcmp(a->nome, pos) == 0) return;
-   G->adj[hashU(pos)] = NEWnode( nome, G->adj[hashU(pos)]);
+   G->adj[hash_value] = NEWnode( nome, G->adj[hash_value]);
    G->A++;
 }
 
 void dijkstra(Graph G, char s[], char destino[]){
-   
-   int posicao = hashU(s);
+   int posicao = hashU(s, G->V);
    int pa[MAX], dist[MAX];
    int mature[MAX];
-   for (int v  = 0; v < G->V; v++){
+   for (int v  = 0; v < MAX; v++){
+      if (G->adj[v]!=NULL)
       pa[v] = -1, mature[posicao] = 0, dist[v] = MAX;
    }
+   
+
    pa[posicao]=1, dist[posicao] = 0;
    while (1){
       int min = MAX;
       int y;
-
-
       // Substituir para Priority Queue
-      for(int z=0; z<G->V; z++){
+      for(int z=0; z<MAX; z++){
+      if (G->adj[z]!=NULL){
          if(mature[z])continue;
          if(dist[z]<min)
             min = dist[z], y=z;
       }
-
+      }
       if (min == MAX)break;
       for (link a = G->adj[y];a!=NULL; a = a->next){
          // dica: calcular o hash do nome apenas uma vez e salvar na variável para evitar TLE
-         int hash_value = hashU(a->nome);
-         if (mature[hashU(a->nome)])continue;
-         if(dist[y]+1 < dist[hashU(a->nome)]){
-            dist[hashU(a->nome)] = dist[y]+1;
-            pa[hashU(a->nome)] = y; 
+         int hash_value = hashU(a->nome, G->V);
+         if (mature[hash_value])continue;
+         if(dist[y]+1 < dist[hash_value]){
+            dist[hash_value] = dist[y]+1;
+            pa[hash_value] = y; 
             }
          } 
       mature[y] = 1;
    }
-   // printf("%d\n", dist[hashU(destino)]);
+  printf("%d\n", dist[hashU(destino, G->V)]);
 }
 
 int main(void){
@@ -105,38 +105,18 @@ int main(void){
     
     Graph G = GRAPHinit(qntV);
 
-   printf("================================\n");
-   printf("Nomes e suas respectivas hashs\n");
    for (int i = 0; i < qntV; i++)
     {
       scanf("%s", nomeOrigemAresta);
-      printf("> %s %d\n", nomeOrigemAresta, hashU(nomeOrigemAresta));
     }
-   printf("================================\n");
    
    for (int i = 0; i < a; i++){
         scanf("%s %s", nomeOrigemAresta, nomeDestinoAresta);
-         // printf("%s %s\n", nomeOrigemAresta, nomeDestinoAresta);
-
         GRAPHinsertArc(G, nomeOrigemAresta, nomeDestinoAresta);
     }
    
-   // 471 -> Hash do Alex
-   for (int i = 0; i < MAX; i++)
-   {
-      if (G->adj[i]!=NULL)
-      {
-         for (link a = G->adj[i]; a != NULL; a = a->next) 
-      // printando conexões do Alex = Duda e Carlos
-      printf(" %s", a->nome);  
-   printf("\n");
-   }
-      }
-      
    
-   
-   //  printf("%d %d", hashU(nomeOrigemBusca), hashU(nomeDestinoBusca));
-   //  dijkstra(G, nomeOrigemBusca, nomeDestinoBusca);
+    dijkstra(G, nomeOrigemBusca, nomeDestinoBusca);
 
     return 0;
 }

@@ -1,14 +1,16 @@
 alex eda
-5 7
+6 8
 alex
 barbara
 carlos
 duda
 eda
+fabricio
 alex carlos
-barbara eda
+barbara fabricio
 alex duda
 barbara alex
-eda duda
 duda barbara
+fabricio duda
 carlos duda
+fabricio carlos
